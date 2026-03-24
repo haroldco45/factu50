@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distrileco - Facturación Mar/2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --vibras-color: #2563eb; }
+        .bg-vibras { background-color: var(--vibras-color); }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <header class="bg-vibras text-white p-4 shadow-lg flex justify-between items-center">
+        <div>
+            <h1 class="text-xl font-bold uppercase">Distrileco</h1>
+            <p class="text-xs text-blue-100">Reporte Mensual: Marzo 2026</p>
+        </div>
+        <img src="logo_vibras.png" alt="Vibras Positivas" class="h-10 opacity-80">
+    </header>
+
+    <div class="p-4 grid grid-cols-2 gap-4">
+        <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500">
+            <p class="text-gray-500 text-xs">Total Facturado</p>
+            <p id="txtTotal" class="text-xl font-bold text-gray-800">$ 0.00</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
+            <p class="text-gray-500 text-xs">Nro. Facturas</p>
+            <p id="txtCantidad" class="text-xl font-bold text-gray-800">0</p>
+        </div>
+    </div>
+
+    <div class="p-4">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="p-3 bg-gray-50 border-b flex justify-between">
+                <span class="font-semibold text-gray-700">Detalle Factu50 (pyg50)</span>
+                <button onclick="cargarDatos()" class="text-blue-600 text-sm font-bold">Actualizar</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+                        <tr>
+                            <th class="p-3">Factura</th>
+                            <th class="p-3">Cliente</th>
+                            <th class="p-3 text-right">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaCuerpo" class="divide-y divide-gray-200 text-gray-700">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-10 p-6 text-center text-gray-400 text-xs">
+        <p>App desarrollada por <strong>Vibras Positivas</strong></p>
+        <p>Derechos de autor (3117700431)</p>
+    </footer>
+
+    <script>
+        const CONFIG = {
+            url: "https://app.nexusai.com.co/ia/api/consultas/factu50", // Endpoint sugerido
+            key: "3010d9ca2f0fec14cfe6bfaa8a9fc3d54249ef15a2ccf729d27d9ea7e26b0c12",
+            tercero: "5e8883a1-6a7e-4cfa-92ea-fafde465a3d9",
+            periodo: "202603"
+        };
+
+        async function cargarDatos() {
+            const tabla = document.getElementById('tablaCuerpo');
+            tabla.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Consultando pyg50...</td></tr>';
+
+            try {
+                // Filtramos por el terceroId y el periodo solicitado
+                const response = await fetch(`${CONFIG.url}?terceroId=${CONFIG.tercero}&periodo=${CONFIG.periodo}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': CONFIG.key
+                    }
+                });
+
+                const data = await response.json();
+                renderizar(data);
+
+            } catch (error) {
+                tabla.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Error de conexión</td></tr>';
+                console.error(error);
+            }
+        }
+
+        function renderizar(datos) {
+            const tabla = document.getElementById('tablaCuerpo');
+            const txtTotal = document.getElementById('txtTotal');
+            const txtCantidad = document.getElementById('txtCantidad');
+            
+            tabla.innerHTML = '';
+            let acumulado = 0;
+
+            if(datos.length === 0) {
+                tabla.innerHTML = '<tr><td colspan="3" class="p-4 text-center">No hay datos en marzo 2026</td></tr>';
+                return;
+            }
+
+            datos.forEach(f => {
+                acumulado += parseFloat(f.total || 0);
+                tabla.innerHTML += `
+                    <tr class="hover:bg-blue-50">
+                        <td class="p-3 font-medium">${f.numero || 'N/A'}</td>
+                        <td class="p-3 text-xs">${f.cliente_nombre || 'Sin Nombre'}</td>
+                        <td class="p-3 text-right font-bold">$${parseFloat(f.total).toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
+            txtTotal.innerText = `$ ${acumulado.toLocaleString()}`;
+            txtCantidad.innerText = datos.length;
+        }
+
+        // Carga inicial al abrir la app
+        window.onload = cargarDatos;
+    </script>
+</body>
+</html>
