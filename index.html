@@ -3,122 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Distrileco - Facturación Mar/2026</title>
+    <title>Distrileco - Dashboard de Facturación</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --vibras-color: #2563eb; }
-        .bg-vibras { background-color: var(--vibras-color); }
+        :root { --vibras-blue: #1e40af; }
+        .bg-vibras { background-color: var(--vibras-blue); }
+        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-slate-100 font-sans min-h-screen">
 
-    <header class="bg-vibras text-white p-4 shadow-lg flex justify-between items-center">
+    <nav class="bg-vibras text-white p-5 shadow-xl flex justify-between items-center sticky top-0 z-50">
         <div>
-            <h1 class="text-xl font-bold uppercase">Distrileco</h1>
-            <p class="text-xs text-blue-100">Reporte Mensual: Marzo 2026</p>
+            <h1 class="text-2xl font-black italic tracking-tighter uppercase">Distrileco</h1>
+            <p class="text-[10px] opacity-90 font-bold uppercase tracking-widest">Control de Facturación · Marzo 2026</p>
         </div>
-        <img src="logo_vibras.png" alt="Vibras Positivas" class="h-10 opacity-80">
-    </header>
+        <div class="text-right hidden sm:block">
+            <p class="text-[10px] opacity-70">Empresa: Distrileco Caucasia SAS</p>
+            <p class="text-[10px] font-mono">DB: pyg50 | User: e_factura</p>
+        </div>
+    </nav>
 
-    <div class="p-4 grid grid-cols-2 gap-4">
-        <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500">
-            <p class="text-gray-500 text-xs">Total Facturado</p>
-            <p id="txtTotal" class="text-xl font-bold text-gray-800">$ 0.00</p>
+    <main class="max-w-5xl mx-auto p-4 md:p-8">
+        
+        <div class="flex flex-wrap gap-3 mb-8">
+            <button onclick="ejecutarCargaMasiva()" id="btnCarga" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-2xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                🚀 SINCRONIZAR CARGA MASIVA
+            </button>
+            <button onclick="consultarReporte()" id="btnConsulta" class="flex-1 bg-white hover:bg-slate-50 text-vibras border-2 border-blue-800 font-bold py-3 px-6 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2">
+                📊 VER REPORTE ACTUAL
+            </button>
         </div>
-        <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
-            <p class="text-gray-500 text-xs">Nro. Facturas</p>
-            <p id="txtCantidad" class="text-xl font-bold text-gray-800">0</p>
-        </div>
-    </div>
 
-    <div class="p-4">
-        <div class="bg-white rounded-xl shadow-md overflow-hidden">
-            <div class="p-3 bg-gray-50 border-b flex justify-between">
-                <span class="font-semibold text-gray-700">Detalle Factu50 (pyg50)</span>
-                <button onclick="cargarDatos()" class="text-blue-600 text-sm font-bold">Actualizar</button>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border-b-8 border-emerald-500">
+                <p class="text-slate-400 text-xs font-black uppercase mb-2">Ventas Netas (Marzo)</p>
+                <p id="totalVentas" class="text-3xl font-black text-slate-800">$ 0.00</p>
+            </div>
+            <div class="bg-white p-6 rounded-3xl shadow-sm border-b-8 border-blue-600">
+                <p class="text-slate-400 text-xs font-black uppercase mb-2">Total Documentos</p>
+                <p id="totalDocs" class="text-3xl font-black text-slate-800">0</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="p-5 bg-slate-50 border-b flex justify-between items-center">
+                <h3 class="font-black text-slate-700 uppercase text-sm tracking-tighter">Detalle de factu50 (SQLAD)</h3>
+                <span class="bg-emerald-100 text-emerald-700 text-[10px] px-3 py-1 rounded-full font-bold">CONEXIÓN ACTIVA</span>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-100 text-slate-500 text-[10px] uppercase font-bold">
                         <tr>
-                            <th class="p-3">Factura</th>
-                            <th class="p-3">Cliente</th>
-                            <th class="p-3 text-right">Valor</th>
+                            <th class="p-5">Nro Factura</th>
+                            <th class="p-5">Nombre del Cliente</th>
+                            <th class="p-5 text-right font-black">Valor Total</th>
                         </tr>
                     </thead>
-                    <tbody id="tablaCuerpo" class="divide-y divide-gray-200 text-gray-700">
-                        </tbody>
+                    <tbody id="cuerpoTabla" class="divide-y divide-slate-100 text-sm">
+                        <tr>
+                            <td colspan="3" class="p-20 text-center text-slate-400 italic">
+                                Esperando sincronización de datos de pyg50...
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
-    </div>
 
-    <footer class="mt-10 p-6 text-center text-gray-400 text-xs">
-        <p>App desarrollada por <strong>Vibras Positivas</strong></p>
-        <p>Derechos de autor (3117700431)</p>
+        <div id="statusLog" class="mt-6 p-4 rounded-2xl bg-slate-800 text-emerald-400 font-mono text-[10px] overflow-y-auto max-h-32 hidden">
+            > Esperando comando...
+        </div>
+
+    </main>
+
+    <footer class="mt-12 p-10 bg-white border-t border-slate-200 text-center">
+        <p class="text-slate-500 font-bold italic mb-1">App desarrollada por <span class="text-blue-700">Vibras Positivas</span></p>
+        <p class="text-slate-400 text-[10px] tracking-widest uppercase">Derechos de Autor (3117700431) · 2026</p>
     </footer>
 
     <script>
-        const CONFIG = {
-            url: "https://app.nexusai.com.co/ia/api/consultas/factu50", // Endpoint sugerido
-            key: "3010d9ca2f0fec14cfe6bfaa8a9fc3d54249ef15a2ccf729d27d9ea7e26b0c12",
-            tercero: "5e8883a1-6a7e-4cfa-92ea-fafde465a3d9",
-            periodo: "202603"
+        // CONFIGURACIÓN MAESTRA DE DISTRILECO
+        const API_CONFIG = {
+            urlBase: "https://app.nexusai.com.co/ia/api",
+            urlCarga: "/business/terceros/carga-masiva",
+            apiKey: "3010d9ca2f0fec14cfe6bfaa8a9fc3d54249ef15a2ccf729d27d9ea7e26b0c12",
+            terceroId: "5e8883a1-6a7e-4cfa-92ea-fafde465a3d9",
+            db: "pyg50"
         };
 
-        async function cargarDatos() {
-            const tabla = document.getElementById('tablaCuerpo');
-            tabla.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Consultando pyg50...</td></tr>';
+        function log(msg) {
+            const el = document.getElementById('statusLog');
+            el.classList.remove('hidden');
+            el.innerHTML += `<br>> ${msg}`;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        // 1. FUNCIÓN DE CARGA MASIVA (POST)
+        async function ejecutarCargaMasiva() {
+            const btn = document.getElementById('btnCarga');
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'animate-pulse');
+            log("Iniciando carga masiva desde SQL Server (pyg50)...");
 
             try {
-                // Filtramos por el terceroId y el periodo solicitado
-                const response = await fetch(`${CONFIG.url}?terceroId=${CONFIG.tercero}&periodo=${CONFIG.periodo}`, {
-                    method: 'GET',
+                const response = await fetch(`${API_CONFIG.urlBase}${API_CONFIG.urlCarga}`, {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-api-key': CONFIG.key
-                    }
+                        'x-api-key': API_CONFIG.apiKey
+                    },
+                    body: JSON.stringify({
+                        terceroId: API_CONFIG.terceroId,
+                        database: API_CONFIG.db,
+                        periodo: "202603",
+                        user_sql: "e_factura"
+                    })
+                });
+
+                if (!response.ok) throw new Error(`Status: ${response.status}`);
+                
+                log("Carga Masiva completada con éxito.");
+                alert("¡Datos sincronizados! Ahora consulta el reporte.");
+                consultarReporte();
+
+            } catch (err) {
+                log(`ERROR CARGA: ${err.message}`);
+                alert("Error al sincronizar. Revisa la consola.");
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'animate-pulse');
+            }
+        }
+
+        // 2. FUNCIÓN DE CONSULTA DE REPORTE (GET)
+        async function consultarReporte() {
+            const tabla = document.getElementById('cuerpoTabla');
+            tabla.innerHTML = '<tr><td colspan="3" class="p-20 text-center animate-bounce text-blue-600 font-bold uppercase">Consultando Nexus AI...</td></tr>';
+            log("Obteniendo reporte de factu50...");
+
+            try {
+                const params = new URLSearchParams({
+                    terceroId: API_CONFIG.terceroId,
+                    periodo: "202603",
+                    db: API_CONFIG.db
+                });
+
+                const response = await fetch(`${API_CONFIG.urlBase}/consultas/factu50?${params}`, {
+                    method: 'GET',
+                    headers: { 'x-api-key': API_CONFIG.apiKey }
                 });
 
                 const data = await response.json();
                 renderizar(data);
 
-            } catch (error) {
-                tabla.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Error de conexión</td></tr>';
-                console.error(error);
+            } catch (err) {
+                log(`ERROR CONSULTA: ${err.message}`);
+                tabla.innerHTML = '<tr><td colspan="3" class="p-20 text-center text-red-500 font-bold italic">Error al leer los datos. Asegúrate de que el CORS esté permitido.</td></tr>';
             }
         }
 
-        function renderizar(datos) {
-            const tabla = document.getElementById('tablaCuerpo');
-            const txtTotal = document.getElementById('txtTotal');
-            const txtCantidad = document.getElementById('txtCantidad');
+        function renderizar(lista) {
+            const tabla = document.getElementById('cuerpoTabla');
+            const totalV = document.getElementById('totalVentas');
+            const totalD = document.getElementById('totalDocs');
             
             tabla.innerHTML = '';
-            let acumulado = 0;
+            let suma = 0;
 
-            if(datos.length === 0) {
-                tabla.innerHTML = '<tr><td colspan="3" class="p-4 text-center">No hay datos en marzo 2026</td></tr>';
+            if (!lista || lista.length === 0) {
+                tabla.innerHTML = '<tr><td colspan="3" class="p-20 text-center">No hay datos para marzo.</td></tr>';
                 return;
             }
 
-            datos.forEach(f => {
-                acumulado += parseFloat(f.total || 0);
+            lista.forEach(f => {
+                const val = parseFloat(f.total || f.valor || 0);
+                suma += val;
                 tabla.innerHTML += `
-                    <tr class="hover:bg-blue-50">
-                        <td class="p-3 font-medium">${f.numero || 'N/A'}</td>
-                        <td class="p-3 text-xs">${f.cliente_nombre || 'Sin Nombre'}</td>
-                        <td class="p-3 text-right font-bold">$${parseFloat(f.total).toLocaleString()}</td>
+                    <tr class="hover:bg-blue-50 transition-colors border-b border-slate-50">
+                        <td class="p-5 font-black text-slate-800 tracking-tight">${f.numero || f.factura}</td>
+                        <td class="p-5 uppercase text-[11px] font-bold text-slate-600">${f.cliente || 'CLIENTE SIN NOMBRE'}</td>
+                        <td class="p-5 text-right font-black text-blue-900">$ ${val.toLocaleString()}</td>
                     </tr>
                 `;
             });
 
-            txtTotal.innerText = `$ ${acumulado.toLocaleString()}`;
-            txtCantidad.innerText = datos.length;
+            totalV.innerText = `$ ${suma.toLocaleString()}`;
+            totalD.innerText = lista.length;
+            log(`Renderizado exitoso: ${lista.length} facturas encontradas.`);
         }
-
-        // Carga inicial al abrir la app
-        window.onload = cargarDatos;
     </script>
 </body>
 </html>
